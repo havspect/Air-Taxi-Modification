@@ -46,13 +46,13 @@ class Variable():
 @dataclass
 class Aircraft():
 
-    weight: Variable = Variable(1980, "kg", boundaries=[1200, 1980], name="Weight")
+    weight: Variable = Variable(1950, "kg", boundaries=[1200, 1980], name="Weight")
     wing_area: Variable = Variable(16.3, "m^2", name="Wing Area")
     wing_span: Variable = Variable(13.1, "m", name="Wing Span")
 
     cruise_speed: Variable = Variable(250, "km/h", boundaries=[100,350], name="Cruise Speed")
     climb_speed: Variable = Variable(80, "km/h", boundaries=[60,120], name="Climb Speed") 
-    cruise_range: Variable = Variable(370 * 1000, "m", boundaries=[100 * 1000, 600 * 1000], name="Cruise Range") 
+    cruise_range: Variable = Variable(350 * 1000, "m", boundaries=[100 * 1000, 600 * 1000], name="Cruise Range") 
     cruise_height: Variable = Variable(3000, "m", [3000, 4000], name="Cruise Height")
 
     e: Variable = Variable(0.8, "-", boundaries=[0.7, 0.8], name="Oswald-Faktor")  #
@@ -119,7 +119,8 @@ class Aircraft():
 a = Aircraft()
 
 
-fig, (ax1, ax2) = plt.subplots(figsize= (6,7),nrows=2, ncols=1, sharex=True)
+fig, ax1 = plt.subplots()
+ax2 = ax1.twinx()
 cruise_speed = np.linspace(150, 350, 100)
 
 lines = list()
@@ -132,8 +133,10 @@ for eff in np.arange(0.40,0.50, 0.02):
     aircrafts = list()
 
     for x in cruise_speed:
-        a = Aircraft(cruise_speed=Variable(x, "km/h"), eff_total=Variable(eff), weight=Variable(1500), cD_0=Variable(0.02), cruise_range=Variable(450_000))
-        
+        # Silent Air Taxi
+        #a = Aircraft(cruise_speed=Variable(x, "km/h"), eff_total=Variable(eff), weight=Variable(1500), cD_0=Variable(0.02), cruise_range=Variable(450_000))
+        # Piper PA-46 
+        a = Aircraft(cruise_speed=Variable(x, "km/h"), eff_total=Variable(eff), cD_0=Variable(0.025), weight=Variable(1700))
         aircrafts.append(a)
         p_cruise.append(a.p_cruise.v)
         e_cruise.append(a.e_cruise.v)
@@ -146,23 +149,27 @@ for eff in np.arange(0.40,0.50, 0.02):
 
 ax1.grid(True)
 ax2.grid(True)
-ax1.set_ylim(0,800)
-ax2.set_ylim(0,800)
+ax1.set_ylim(0,550)
+ax2.set_ylim(0,550)
 ax2.set_ylabel("Leistung [kW]")
 ax1.set_ylabel("Tatsächlicher Energiebedarf [kWh]")
-ax2.set_xlabel("Reisegeschwindigkeit [km/h]")
+ax1.set_xlabel("Reisegeschwindigkeit [km/h]")
 
-fig.legend(
-    lines,
-    labels, 
-    loc="lower center",
-    borderaxespad=0.1,
-    ncol=3
-)
+
+ax1.legend()
+# fig.legend(
+#     lines,
+#     labels, 
+#     loc="lower center",
+#     borderaxespad=0.1,
+#     ncol=3
+# )
 
 plt.tight_layout()
 plt.subplots_adjust(bottom=0.14)
 plt.show()
+
+print(Aircraft(cruise_speed=Variable(250, "km/h"), eff_total=Variable(0.42), cD_0=Variable(0.025), weight=Variable(1700)))
 
 
 
