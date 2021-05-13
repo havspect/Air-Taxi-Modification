@@ -74,12 +74,12 @@ class Aircraft():
 
     def __post_init__(self):
         # Climb
-        self.cL_climb = Variable(self.calc_cL(speed=self.climb_speed, rho=0.998), "-", name="c_L_climb")
+        self.cL_climb = Variable(self.calc_cL(speed=self.climb_speed), "-", name="c_L_climb")
         self.cD_climb = Variable(self.calc_cD(self.cL_climb), "-", name="c_D_climb")
         self.LD_climb = Variable(self.cL_climb.v / self.cD_climb.v, "-", name="L/D")
 
         # Cruise
-        self.cL_cruise = Variable(self.calc_cL(speed=self.cruise_speed), "-", name="c_L_cruise")
+        self.cL_cruise = Variable(self.calc_cL(speed=self.cruise_speed, rho=0.909), "-", name="c_L_cruise")
         self.cD_cruise = Variable(self.calc_cD(self.cL_cruise), "-", name="c_D_cruise")
         self.LD_cruise = Variable(self.cL_cruise.v / self.cD_cruise.v , "-", name="L/D")
 
@@ -119,60 +119,50 @@ class Aircraft():
 a = Aircraft()
 
 
-fig, ax = plt.subplots()
-#ax2 = ax.twinx() 
-cruise_speed = np.linspace(150, 300, 100)
+fig, (ax1, ax2) = plt.subplots(figsize= (6,7),nrows=2, ncols=1, sharex=True)
+cruise_speed = np.linspace(150, 350, 100)
 
-for eff in np.arange(0.34,0.49, 0.04):
-    var = [Aircraft(cruise_speed=Variable(x, "km/h"), eff_total=Variable(eff)).e_cruise.v for x in cruise_speed]
-    ax.plot(cruise_speed, var, label=f"Wirkungsgrad (TTP): {round(eff, 2)}")
+lines = list()
+labels = list()
 
-    #var = [Aircraft(cruise_speed=Variable(x, "km/h"), eff_total=Variable(eff)).p_cruise.v for x in cruise_speed]
-    #ax2.plot(cruise_speed, var, "--" , label=f"Wirkungsgrad: {round(eff, 2)}")
+for eff in np.arange(0.40,0.50, 0.02):
+
+    e_cruise = list()
+    p_cruise = list()
+    aircrafts = list()
+
+    for x in cruise_speed:
+        a = Aircraft(cruise_speed=Variable(x, "km/h"), eff_total=Variable(eff), weight=Variable(1500), cD_0=Variable(0.02), cruise_range=Variable(450_000))
+        
+        aircrafts.append(a)
+        p_cruise.append(a.p_cruise.v)
+        e_cruise.append(a.e_cruise.v)
+
+    lines.append(ax1.plot(cruise_speed, e_cruise, label=f"Wirkungsgrad (TTP): {round(eff, 2)}")[0])
+    labels.append("$\eta_{TTP}=$" + f"{round(eff, 2)}")
+    ax2.plot(cruise_speed, p_cruise, "--" , label=f"Wirkungsgrad: {round(eff, 2)}")
     
     #ax.annotate(f" E:{round(min(var),2)}", xy=(cruise_speed[var.index(min(var))], min(var)), xytext=(cruise_speed[var.index(min(var))], min(var)+5), size=10)
 
-ax.grid(True)
-ax.set_ylim(0,750)
-#ax2.set_ylim(0,800)
-#ax2.set_ylabel("Leistung [kW]")
-ax.set_ylabel("Tatsächlicher Energiebedarf [kWh]")
-ax.set_xlabel("Reisegeschwindigkeit [km/h]")
-#ax.set_title("Einfluss von Wirkungsgrad und Geschwindigkeit auf den tatsächlichen Verbrauch")
-ax.legend()
+ax1.grid(True)
+ax2.grid(True)
+ax1.set_ylim(0,800)
+ax2.set_ylim(0,800)
+ax2.set_ylabel("Leistung [kW]")
+ax1.set_ylabel("Tatsächlicher Energiebedarf [kWh]")
+ax2.set_xlabel("Reisegeschwindigkeit [km/h]")
+
+fig.legend(
+    lines,
+    labels, 
+    loc="lower center",
+    borderaxespad=0.1,
+    ncol=3
+)
+
 plt.tight_layout()
+plt.subplots_adjust(bottom=0.14)
 plt.show()
 
-fig, ax = plt.subplots()
-cruise_speed = np.linspace(150, 300, 100)
 
-for eff in np.arange(0.34,0.49, 0.02):
-    var = [Aircraft(cruise_speed=Variable(x, "km/h"), eff_total=Variable(eff)).p_cruise.v for x in cruise_speed]
-    ax.plot(cruise_speed, var, label=f"Wirkungsgrad: {round(eff, 2)}")
-    #ax.annotate(f" E:{round(min(var),2)}", xy=(cruise_speed[var.index(min(var))], min(var)), xytext=(cruise_speed[var.index(min(var))], min(var)+5), size=10)
-
-ax.set_ylabel("Power [kW]")
-ax.set_xlabel("Reisegeschwindigkeit [km/h]")
-ax.legend()
-ax.grid()
-plt.tight_layout()
-#plt.show()
-
-
-fig, ax = plt.subplots()
-cruise_range = np.linspace(200_000, 500_000, 10000)
-
-for eff in np.arange(0.34,0.49, 0.02):
-    var = [Aircraft(cruise_range=Variable(x), eff_total=Variable(eff)).e_cruise.v for x in cruise_range]
-    ax.plot(cruise_range / 1000, var, label=f"Wirkungsgrad: {round(eff, 2)}")
-    #ax.annotate(f" E:{round(min(var),2)}", xy=(cruise_speed[var.index(min(var))], min(var)), xytext=(cruise_speed[var.index(min(var))], min(var)+5), size=10)
-
-ax.set_ylabel("Energie [kWh]")
-ax.set_xlabel("Reisestrecke [km]")
-ax.legend()
-plt.tight_layout()
-#plt.show()
-
-a = Aircraft()
-print(a)
 
